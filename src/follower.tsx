@@ -223,7 +223,6 @@ function RatingElement(props: { platform: string, handle: string }): JSX.Element
 function Table(props: { setSubPage: Dispatch<SubPage> }): JSX.Element {
     const {setSubPage} = props;
     const {Numeral} = Typography;
-    const [refresh, setRefresh] = useState(0);
     const follower = SearchFollower({});
     const data = follower?.map((v: any, index: number) => {
         return {
@@ -306,7 +305,7 @@ function Table(props: { setSubPage: Dispatch<SubPage> }): JSX.Element {
                                     Modal.confirm({
                                         title: '是否删除', onOk: () => {
                                             FollowerApi('delete', {fid: fid}).then(() => {
-                                                setRefresh(refresh + 1);
+                                                setSubPage({page: 'table'});
                                             });
                                         }
                                     });

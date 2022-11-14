@@ -21,6 +21,10 @@ function application() {
         const html = path.join(process.cwd(), '.goodguy-desktop', 'react-page', 'index.html');
         protocol.registerBufferProtocol('goodguy', (request) => {
             const urlParam = new URLSearchParams(new URL(request.url).search);
+            if (config?.debug) {
+                win.loadURL(`http://127.0.0.1:3000/?${urlParam.toString()}`);
+                return;
+            }
             const query = {};
             urlParam.forEach((value, key) => {
                 // @ts-ignore
