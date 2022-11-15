@@ -173,7 +173,7 @@ function AtCoderRatingElement(props: { handle: string, rating: number }): JSX.El
     const {handle, rating} = props;
     const {Numeral} = Typography;
     return (
-        <Numeral style={{color: getCodeforcesRatingColor(rating), cursor: 'pointer'}} onClick={() => {
+        <Numeral style={{color: getAtcoderRatingColor(rating), cursor: 'pointer'}} onClick={() => {
             JumpLink(`https://atcoder.jp/users/${encodeURI(handle)}`).then(() => {
             });
         }}>
