@@ -2,7 +2,7 @@ import * as portfinder from "portfinder";
 import * as path from "path";
 import * as child_process from "child_process";
 import GetConfig from "./config";
-import axios from 'axios'; // bug with v1.1.3
+import axios from 'axios'; // bug with v1.1.3 https://github.com/axios/axios/issues/5011
 // const axios = require('axios'); // module not found after package
 
 function sleep(ms: number) {

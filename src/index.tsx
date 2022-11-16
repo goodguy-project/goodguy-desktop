@@ -1,15 +1,16 @@
+import 'normalize.css';
 import React from "react";
 import ReactDOM from "react-dom/client";
 import {ReportHandler} from "web-vitals";
 import Root from "./root";
-import 'normalize.css';
+import Compare from "./compare";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
 root.render(
     <React.StrictMode>
-        <Root/>
+        <Compare/>
     </React.StrictMode>
 );
 
