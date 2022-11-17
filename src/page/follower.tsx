@@ -1,11 +1,11 @@
 import {Button, Form, Modal, Popover, Spin, Table as SemiTable, Typography} from "@douyinfe/semi-ui";
-import {CrawlApi, FollowerApi, JumpLink, SearchFollower} from "./api";
+import {CrawlApi, FollowerApi, JumpLink, SearchFollower} from "../api";
 import {Dispatch, useState} from "react";
 import Column from "@douyinfe/semi-ui/lib/es/table/Column";
 import {deepCopy} from "deep-copy-ts";
 import {Page} from "./page";
 import {IconAlertCircle} from "@douyinfe/semi-icons";
-import {FrontEndJump} from "./util";
+import {FrontEndJump} from "../util";
 import {FormApi, FormState } from "@douyinfe/semi-ui/lib/es/form";
 
 type SubPage = { page: 'table' | 'manager', param?: any };
@@ -30,8 +30,7 @@ function ManagerFollower(props: { fid?: number, setPage: Dispatch<Page>, setSubP
             transform: 'translate(-50%, -50%)',
             // textAlign: 'center',
         }}>
-            <Form render={(props: {formState: FormState<any>, formApi: FormApi<any>, values: any}) => {
-                const {formState, formApi, values} = props;
+            <Form render={({formState, formApi, values}) => {
                 return (
                     <>
                         <Form.Input initValue={follower?.name || ''} field='name' label='昵称' style={{width: 200}}

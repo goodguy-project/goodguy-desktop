@@ -16,6 +16,7 @@
     "axios": "1.2.0-alpha.1",
     "child_process": "^1.0.2",
     "deep-copy-ts": "^0.5.4",
+    "echarts-for-react": "^3.0.2",
     "js-base64": "^3.7.2",
     "normalize.css": "^8.0.1",
     "portfinder": "^1.0.32",
@@ -32,8 +33,7 @@
     "react-eject": "react-scripts eject",
     "dev-1": "react-scripts start",
     "dev-2": "tsc app/app.ts && electron .",
-    "node-ts-build": "tsc app/app.ts",
-    "electron-build": "electron-builder",
+    "electron-build": "tsc app/app.ts && electron-builder",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"

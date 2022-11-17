@@ -1,10 +1,11 @@
 import Navigation from "./nav";
-import Calendar from "./calendar";
-import Follower from "./follower";
+import Calendar from "./page/calendar";
+import Follower from "./page/follower";
 import {ReactNode} from "react";
-import {Page} from "./page";
-import Loading from "./loading";
+import {Page} from "./page/page";
+import Loading from "./page/loading";
 import {FrontEndJump} from "./util";
+import Compare from "./page/compare";
 
 export default function Root() {
     const page: Page = (new URLSearchParams(window.location.search).get('page') || 'calendar') as Page;
@@ -21,6 +22,7 @@ export default function Root() {
     const PageMap = new Map<Page, ReactNode>([
         ['calendar', <Calendar/>],
         ['follower', <Follower setPage={setPage}/>],
+        ['compare', <Compare/>],
     ]);
     return (
         <div>

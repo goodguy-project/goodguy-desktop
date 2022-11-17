@@ -1,5 +1,5 @@
 import {Button, Calendar as SemiCalendar, Spin, Typography} from '@douyinfe/semi-ui';
-import {CrawlApi, JumpLink} from "./api";
+import {CrawlApi, JumpLink} from "../api";
 import {EventObject} from '@douyinfe/semi-foundation/lib/es/calendar/foundation';
 import {IconClose, IconTickCircle} from "@douyinfe/semi-icons";
 import {useState} from "react";
@@ -54,15 +54,6 @@ function DoShowCalendar(recentContest: any[]): JSX.Element {
         </div>
     );
 }
-
-const SimpleOnlineJudgeName = new Map<string, string>([
-    ['codeforces', 'CF'],
-    ['nowcoder', '牛客'],
-    ['atcoder', 'ATC'],
-    ['leetcode', '力扣'],
-    ['acwing', "ACW"],
-    ['luogu', '洛谷'],
-]);
 
 function RecentContestLoadingPage(platforms: string[]): JSX.Element {
     const [force, setForce] = useState(false);
@@ -123,8 +114,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
             }}>
                 {
                     recentContest.map((value, index) => {
-                        let simple = SimpleOnlineJudgeName.get(value?.platform || '');
-                        simple = simple || value?.platform || '';
+                        const platform = value?.platform || '';
                         if (value?.response === null) {
                             return (
                                 <span style={{
@@ -136,7 +126,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                                 <IconClose/>
                                 <div style={{
                                     fontSize: '7px',
-                                }}>{simple}</div>
+                                }}>{platform}</div>
                             </span>
                             );
                         } else if (value?.response) {
@@ -150,7 +140,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                                 <IconTickCircle/>
                                 <div style={{
                                     fontSize: '7px',
-                                }}>{simple}</div>
+                                }}>{platform}</div>
                             </span>
                             );
                         }
@@ -158,7 +148,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                             <Spin size="large" key={index} style={{
                                 transform: 'scale(2)',
                                 marginRight: index + 1 === platforms.length ? '0' : '100px',
-                            }} tip={simple}>
+                            }} tip={platform}>
                             </Spin>
                         );
                     }).map((value, index) => {

@@ -3,14 +3,13 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import {ReportHandler} from "web-vitals";
 import Root from "./root";
-import Compare from "./compare";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
 root.render(
     <React.StrictMode>
-        <Compare/>
+        <Root/>
     </React.StrictMode>
 );
 
