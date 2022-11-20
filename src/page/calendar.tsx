@@ -100,7 +100,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                 所有平台的最近比赛都爬取成功了，接下来为你画出最近一周的比赛日历。
             </div>
         ) : <></>;
-    }
+    };
     return (
         <>
             <div style={{
@@ -110,7 +110,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
                 textAlign: 'center',
-                display: 'inline',
+                display: 'flex',
             }}>
                 {
                     recentContest.map((value, index) => {
@@ -118,38 +118,43 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                         if (value?.response === null) {
                             return (
                                 <span style={{
-                                    marginRight: index + 1 === platforms.length ? '0' : '150px',
+                                    marginRight: index + 1 === platforms.length ? '0' : '180px',
                                     display: 'inline-block',
                                     transform: 'scale(4)',
                                     color: '#e01313',
                                 }}>
-                                <IconClose/>
-                                <div style={{
-                                    fontSize: '7px',
-                                }}>{platform}</div>
-                            </span>
+                                    <IconClose/>
+                                    <div style={{
+                                        fontSize: '7px',
+                                    }}>{platform}</div>
+                                </span>
                             );
                         } else if (value?.response) {
                             return (
                                 <span style={{
-                                    marginRight: index + 1 === platforms.length ? '0' : '150px',
+                                    marginRight: index + 1 === platforms.length ? '0' : '180px',
                                     display: 'inline-block',
                                     transform: 'scale(4)',
                                     color: '#159e22',
                                 }}>
-                                <IconTickCircle/>
-                                <div style={{
-                                    fontSize: '7px',
-                                }}>{platform}</div>
-                            </span>
+                                    <IconTickCircle/>
+                                    <div style={{
+                                        fontSize: '7px',
+                                    }}>{platform}</div>
+                                </span>
                             );
                         }
                         return (
-                            <Spin size="large" key={index} style={{
-                                transform: 'scale(2)',
-                                marginRight: index + 1 === platforms.length ? '0' : '100px',
-                            }} tip={platform}>
-                            </Spin>
+                            <span style={{
+                                transform: 'scale(2.0)',
+                                marginRight: index + 1 === platforms.length ? '0' : '150px',
+                                display: 'inline-block',
+                            }}>
+                                <Spin size="large" key={index}/>
+                                <div style={{
+                                    fontSize: '14px',
+                                }}>{platform}</div>
+                            </span>
                         );
                     }).map((value, index) => {
                         return <span key={index}>{value}</span>;
@@ -171,7 +176,7 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                     allSuccess ? <></> : (
                         <Button size="large" style={{
                             transform: 'scale(1.2)',
-                        }} theme='solid' type='secondary' onClick={() => {
+                        }} theme="solid" type="secondary" onClick={() => {
                             setForce(true);
                         }}>强制渲染</Button>
                     )

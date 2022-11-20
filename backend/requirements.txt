@@ -4,3 +4,4 @@ cachetools
 Flask-Cors
 gevent
 pyinstaller
+PyYAML

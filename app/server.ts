@@ -44,8 +44,10 @@ export default async function Server(host: string) {
 
     setInterval(() => {
         axios.post(`http://${realHost}:${port}/heartbeat`).catch((e: any) => {
-            console.log(e);
-            process.exit(1);
+            console.log('[fatal] server boomed!!!');
+            setTimeout(() => {
+                process.exit(1);
+            }, 0);
         });
     }, 1000);
 
