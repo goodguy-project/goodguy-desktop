@@ -1,6 +1,7 @@
 {
   "name": "goodguy-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "homepage": ".",
   "private": true,
   "description": "goodguy-desktop",
   "main": "app/app.js",
@@ -32,7 +33,7 @@
     "react-test": "react-scripts test",
     "react-eject": "react-scripts eject",
     "dev-1": "react-scripts start",
-    "dev-2": "tsc app/app.ts && electron .",
+    "dev-2": "tsc app/app.ts && cross-env NODE_ENV=development electron .",
     "electron-build": "tsc app/app.ts && electron-builder",
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -51,12 +52,14 @@
     ]
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "electron": "21.2.3",
     "electron-builder": "^23.6.0"
   },
   "build": {
     "appId": "com.goodguy-project.goodguy-desktop",
     "productName": "goodguy-desktop",
+    "compression": "maximum",
     "win": {
       "target": [
         "zip",
