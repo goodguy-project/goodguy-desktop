@@ -1,6 +1,6 @@
 import {app, BrowserWindow, screen, protocol} from "electron";
 import * as path from "path";
-import GetConfig from "./config";
+import {GetConfig, GetExternalResourcesRoot} from "./config";
 import Server from "./server";
 
 function application() {
@@ -18,7 +18,7 @@ function application() {
         const host = config?.host || '0.0.0.0';
         const debug = config?.debug || false;
         // show loading page
-        const html = path.join(process.cwd(), '.goodguy-desktop', 'react-page', 'index.html');
+        const html = path.join(GetExternalResourcesRoot(), 'react-page', 'index.html');
         protocol.registerBufferProtocol('goodguy', (request) => {
             const urlParam = new URLSearchParams(new URL(request.url).search);
             if (config?.debug) {

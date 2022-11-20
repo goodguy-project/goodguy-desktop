@@ -8,6 +8,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread, Lock
 
+import yaml
+
 _POOL = ThreadPoolExecutor(max_workers=8)
 
 _CACHE = {}
@@ -87,7 +89,8 @@ def crawl(func: str, param: any):
         if cache['time'] + 3600 > time.time():
             if cache['status'] == 'ok':
                 return cache['data']
-            else:
+            elif cache['time'] + 30 > time.time():
+                # 30秒内的失败直接返回
                 failed = True
     except Exception as e:
         logging.exception(e)
@@ -98,8 +101,29 @@ def crawl(func: str, param: any):
     return _POOL.submit(do_crawl, func, param).result(60.0)
 
 
+_SETTING_LOCK = Lock()
+
+
+def update_setting(data):
+    with _SETTING_LOCK:
+        with open('config.yaml', 'w', encoding='utf-8') as file:
+            file.write(yaml.dump(data))
+
+
+def get_setting():
+    with _SETTING_LOCK:
+        try:
+            with open('config.yaml', 'r', encoding='utf-8') as file:
+                return yaml.load(file.read(), Loader=yaml.FullLoader)
+        except Exception as e:
+            logging.exception(e)
+    return {}
+
+
 __all__ = [
     'crawl',
+    'update_setting',
+    'get_setting',
 ]
 
 if __name__ == '__main__':

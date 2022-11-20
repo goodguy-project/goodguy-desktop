@@ -1,10 +1,10 @@
 import logging
 import os
+import threading
 from contextlib import contextmanager
 
 from sqlalchemy import Column, create_engine, Integer, Text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from sqlalchemy.pool import SingletonThreadPool
 
 _ORM_BASE = declarative_base()
 
@@ -30,20 +30,23 @@ class Follower(_ORM_BASE):
 
 _CWD = os.getcwd()
 _DB_PATH = os.path.join(_CWD, 'goodguy-desktop.sqlite3')
-_ENGINE = create_engine(f'sqlite:///{_DB_PATH}', poolclass=SingletonThreadPool,
-                        connect_args={'check_same_thread': False})
+_ENGINE = create_engine(f'sqlite:///{_DB_PATH}')
 _SESSION_CLZ = sessionmaker(bind=_ENGINE)
 
 # create table if not exist
 Follower.__table__.create(bind=_ENGINE, checkfirst=True)
 
+# 强行串行
+_LOCK = threading.Lock()
+
 
 @contextmanager
 def session() -> Session:
     try:
-        s = _SESSION_CLZ()
-        yield s
-        s.commit()
+        with _LOCK:
+            s = _SESSION_CLZ()
+            yield s
+            s.commit()
     except Exception as e:
         logging.exception(e)
         raise

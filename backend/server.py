@@ -1,11 +1,10 @@
 import logging
 from flask import Flask, request, abort
 from flask_cors import cross_origin
-from gevent.pywsgi import WSGIServer
 from sqlalchemy.orm import Session
 import webbrowser
 
-from crawl import crawl
+from crawl import crawl, update_setting, get_setting
 from database import Follower, session
 from heartbeat import alive
 
@@ -103,7 +102,7 @@ def search_follower():
             q = s.query(Follower)
             if isinstance(fid, int) or isinstance(fid, str):
                 q = q.filter(Follower.id == int(fid))
-            if isinstance(fid, list):
+            elif isinstance(fid, list):
                 q = q.filter(Follower.id.in_(fid))
             resp = [e.to_dict() for e in q.all()]
     except Exception as e:
@@ -112,6 +111,20 @@ def search_follower():
     else:
         return {'code': 0, 'data': resp}
     return {'code': -1}
+
+
+@_APP.route('/crawl/get-setting', methods=['POST'])
+@cross_origin()
+def get_crawl_setting():
+    return {'code': 0, 'data': get_setting()}
+
+
+@_APP.route('/crawl/update-setting', methods=['POST'])
+@cross_origin()
+def update_crawl_setting():
+    data = request.json
+    update_setting(data)
+    return {'code': 0}
 
 
 @_APP.route('/jump', methods=['POST'])

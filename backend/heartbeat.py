@@ -4,7 +4,7 @@ import time
 
 from cachetools import TTLCache
 
-_Cache = TTLCache(maxsize=64, ttl=30)
+_Cache = TTLCache(maxsize=64, ttl=15)
 
 
 def alive():

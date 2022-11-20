@@ -1,7 +1,15 @@
 import {Nav} from "@douyinfe/semi-ui";
-import {IconCalendar, IconDesktop, IconMoon, IconSun, IconUserGroup} from "@douyinfe/semi-icons";
+import {
+    IconCalendar,
+    IconDesktop,
+    IconMoon,
+    IconPulse,
+    IconSetting,
+    IconSun,
+    IconUserGroup
+} from "@douyinfe/semi-icons";
 import {Dispatch, useEffect, useState} from "react";
-import {Page} from "./page";
+import {Page} from "./page/page";
 
 const darkModeStorageKey = 'goodguy-desktop.dark-mode';
 
@@ -41,6 +49,8 @@ export default function Navigation(props: { page: Page, setPage: Dispatch<Page> 
             items={[
                 {itemKey: 'calendar', text: '比赛日历', icon: <IconCalendar/>},
                 {itemKey: 'follower', text: '关注', icon: <IconUserGroup/>},
+                {itemKey: 'compare', text: '对比', icon: <IconPulse/>},
+                {itemKey: 'setting', text: '设置', icon: <IconSetting/>}
             ]}
             mode="horizontal"
             header={{

@@ -36,7 +36,7 @@ export function CrawlApi(func: string, param?: any) {
 export function SearchFollower(param?: any) {
     param = param || {};
     const [resp, setResp] = useState<any>(undefined);
-    if (resp === undefined) {
+    useEffect(() => {
         axios.post(`${server}/follower/search`, param).then((r) => {
             if (r.status === 200) {
                 setResp({data: r.data});
@@ -44,7 +44,7 @@ export function SearchFollower(param?: any) {
         }).catch((e) => {
             alert(e);
         });
-    }
+    }, [JSON.stringify(param)]);
     return resp?.data?.data;
 }
 
@@ -59,6 +59,31 @@ export async function FollowerApi(op: string, param?: any) {
 
 export async function JumpLink(link: string) {
     const resp = await axios.post(`${server}/jump`, {link: link});
+    if (resp.status !== 200) {
+        console.log(resp);
+    }
+    return resp.data;
+}
+
+export function GetCrawlSetting() {
+    const [resp, setResp] = useState<any>(undefined);
+    useEffect(() => {
+        axios.post(`${server}/crawl/get-setting`).then((r) => {
+            if (r.status === 200) {
+                setTimeout(() => {
+                    setResp({data: r.data});
+                }, 0);
+            }
+        }).catch((e) => {
+            alert(e);
+        });
+    }, []);
+    return resp?.data?.data;
+}
+
+export async function UpdateCrawlSetting(data: any) {
+    console.log(data);
+    const resp = await axios.post(`${server}/crawl/update-setting`, data);
     if (resp.status !== 200) {
         console.log(resp);
     }

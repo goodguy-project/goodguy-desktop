@@ -1,8 +1,8 @@
+import 'normalize.css';
 import React from "react";
 import ReactDOM from "react-dom/client";
 import {ReportHandler} from "web-vitals";
 import Root from "./root";
-import 'normalize.css';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
