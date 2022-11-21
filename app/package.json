@@ -1,0 +1,41 @@
+{
+  "name": "goodguy-desktop.app",
+  "version": "0.1.2",
+  "description": "goodguy-desktop.app",
+  "main": "app.js",
+  "scripts": {
+    "debug": "tsc app.ts && cross-env NODE_ENV=development electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goodguy-project/goodguy-desktop.git"
+  },
+  "author": "ConanYu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/goodguy-project/goodguy-desktop/issues"
+  },
+  "homepage": "https://github.com/goodguy-project/goodguy-desktop#readme",
+  "dependencies": {
+    "axios": "^1.2.0-alpha.1",
+    "child_process": "^1.0.2",
+    "portfinder": "^1.0.32"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^21.3.0",
+    "electron-builder": "^23.6.0",
+    "ts-node": "^10.9.1"
+  },
+  "build": {
+    "appId": "com.goodguy-project.goodguy-desktop",
+    "productName": "goodguy-desktop",
+    "compression": "maximum",
+    "win": {
+      "target": [
+        "zip"
+      ]
+    },
+    "extends": null
+  }
+}

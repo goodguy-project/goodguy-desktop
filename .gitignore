@@ -155,3 +155,4 @@ yarn-error.log*
 out/
 
 goodguy-desktop.sqlite3
+.goodguy-desktop/
