@@ -1,10 +1,11 @@
+import json
 import logging
 from flask import Flask, request, abort
 from flask_cors import cross_origin
 from sqlalchemy.orm import Session
 import webbrowser
 
-from crawl import crawl, update_setting, get_setting
+from crawl import crawl, update_setting, get_setting, clean_cache
 from database import Follower, session
 from heartbeat import alive
 
@@ -113,6 +114,31 @@ def search_follower():
     return {'code': -1}
 
 
+@_APP.route('/follower/load', methods=['POST'])
+@cross_origin()
+def load_follower():
+    data = request.json
+    filename = data.get('filename')
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            data = json.loads(f.read())
+        if not isinstance(data, list):
+            abort(400)
+        with session() as s:
+            s.query(Follower).delete()
+            for d in data:
+                if isinstance(d, dict):
+                    if d.get('id'):
+                        d['id'] = None
+                    s.add(Follower(**d))
+    except Exception as e:
+        abort(400)
+        _ = e
+    else:
+        return {'code': 0}
+    return {'code': -1}
+
+
 @_APP.route('/crawl/get-setting', methods=['POST'])
 @cross_origin()
 def get_crawl_setting():
@@ -124,6 +150,13 @@ def get_crawl_setting():
 def update_crawl_setting():
     data = request.json
     update_setting(data)
+    return {'code': 0}
+
+
+@_APP.route('/crawl/clean-cache', methods=['POST'])
+@cross_origin()
+def clean_crawl_cache():
+    clean_cache()
     return {'code': 0}
 
 

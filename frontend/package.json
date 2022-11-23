@@ -23,6 +23,7 @@
     "deep-copy-ts": "^0.5.4",
     "echarts": "^5.4.0",
     "echarts-for-react": "^3.0.2",
+    "electron": "^21.3.0",
     "normalize.css": "^8.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -1,16 +1,53 @@
-import {app, BrowserWindow, screen, protocol} from "electron";
+import {app, BrowserWindow, screen, protocol, ipcMain, dialog} from "electron";
 import * as path from "path";
 import {GetConfig, GetExternalResourcesRoot} from "./config";
 import Server from "./server";
+import * as fs from "fs";
 
 function application() {
+    // prepare preload.js
+    const pathPreloadJs = path.join(GetExternalResourcesRoot(), '.preload.js');
+    const preloadJs = `
+        const {contextBridge, ipcRenderer} = require('electron');
+        contextBridge.exposeInMainWorld('app', {
+            SelectFile: (properties) => ipcRenderer.invoke('SelectFile', properties),
+            SaveFile: (filename, data) => ipcRenderer.invoke('SaveFile', filename, data),
+        });
+    `;
+    fs.writeFileSync(pathPreloadJs, preloadJs);
+
     const createWindow = () => {
+        ipcMain.handle('SelectFile', async (event, args) => {
+            const properties = args.length > 0 ? args[0] : {};
+            const {canceled, filePaths} = await dialog.showOpenDialog(Object.assign(properties, {
+                properties: ['openFile'],
+            }));
+            return canceled ? null : filePaths[0];
+        });
+        ipcMain.handle('SaveFile', async (event, filename: string, data: string) => {
+            const {canceled, filePaths} = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+            });
+            if (!canceled && filePaths.length > 0) {
+                const p = path.join(filePaths[0], filename);
+                fs.writeFile(p, data, (err) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
+                return p;
+            }
+            return null;
+        });
         const config = GetConfig();
         // Create the browser window.
         const win = new BrowserWindow({
             width: screen.getPrimaryDisplay().workAreaSize.width,
             height: screen.getPrimaryDisplay().workAreaSize.height,
-            autoHideMenuBar: true
+            autoHideMenuBar: true,
+            webPreferences: {
+                preload: pathPreloadJs,
+            },
         });
         win.maximize();
         // and load the index.html of the app.
@@ -20,18 +57,26 @@ function application() {
         // show loading page
         const html = path.join(GetExternalResourcesRoot(), 'react-page', 'index.html');
         protocol.registerBufferProtocol('goodguy', (request) => {
-            const urlParam = new URLSearchParams(new URL(request.url).search);
-            if (config?.debug) {
-                win.loadURL(`http://127.0.0.1:3000/?${urlParam.toString()}`);
-                return;
+            const url = new URL(request.url);
+            const urlParam = new URLSearchParams(new URL(url).search);
+            switch (url.host) {
+                case 'jump': {
+                    if (config?.debug) {
+                        win.loadURL(`http://127.0.0.1:3000/?${urlParam.toString()}`);
+                        return;
+                    }
+                    const query = {};
+                    urlParam.forEach((value, key) => {
+                        // @ts-ignore
+                        query[key] = value;
+                    });
+                    win.loadFile(html, {query: query}).then(() => {
+                    });
+                    break;
+                }
+                default:
+                    console.log(`illegal url: ${request.url}`);
             }
-            const query = {};
-            urlParam.forEach((value, key) => {
-                // @ts-ignore
-                query[key] = value;
-            });
-            win.loadFile(html, {query: query}).then(() => {
-            });
         });
         const loadingPage = debug ? win.loadURL(`http://127.0.0.1:3000/?page=loading`) : win.loadFile(html, {
             query: {page: 'loading'}

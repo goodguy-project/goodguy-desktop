@@ -1,5 +1,5 @@
 import {Button, Col, Form, Modal, Row, Spin, Typography} from "@douyinfe/semi-ui";
-import {GetCrawlSetting, UpdateCrawlSetting} from "../api";
+import {CleanCrawlCache, GetCrawlSetting, UpdateCrawlSetting} from "../api";
 import {Dispatch} from "react";
 import {Page} from "./page";
 import Loading from "./loading";
@@ -64,6 +64,28 @@ export default function Setting(props: { setPage: Dispatch<Page> }): JSX.Element
                             });
                         }}>
                             确认
+                        </Button>
+                    </Row>
+                </Section>
+                <Section text="其他">
+                    <Row style={{
+                        marginTop: 10,
+                    }}>
+                        <Button theme="solid" onClick={() => {
+                            Modal.confirm({
+                                title: '确认清除爬虫缓存',
+                                onOk() {
+                                    CleanCrawlCache().then(() => {
+                                        Modal.success({
+                                            title: '清除成功',
+                                        });
+                                    }).catch((e) => {
+                                        alert(e);
+                                    });
+                                },
+                            });
+                        }}>
+                            清除爬虫缓存
                         </Button>
                     </Row>
                 </Section>

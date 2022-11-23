@@ -52,6 +52,14 @@ def set_cache(func: str, param: str, value):
         _CACHE[func][param] = value
 
 
+def clean_cache():
+    global _CACHE, _CACHE_LOCK
+    with _CACHE_LOCK:
+        _CACHE = {}
+        with open(_FILE, 'w', encoding='utf-8') as f:
+            f.write('{}')
+
+
 def do_crawl(func: str, param: any):
     param = base64.b64encode(json.dumps(param).encode('utf-8')).decode('utf-8')
     p = None
@@ -124,6 +132,7 @@ __all__ = [
     'crawl',
     'update_setting',
     'get_setting',
+    'clean_cache',
 ]
 
 if __name__ == '__main__':

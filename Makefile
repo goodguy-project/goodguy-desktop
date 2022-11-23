@@ -1,3 +1,7 @@
+project-init:
+	cd app && npm install
+	cd frontend && npm install
+
 backend-build:
 	cd backend && source venv/Scripts/activate && make pack
 
@@ -21,9 +25,9 @@ app-debug:
 	wait;
 
 all-build-win:
-#	make frontend-build
-#	make backend-build
-#	make app-build
+	make frontend-build
+	make backend-build
+	make app-build
 	rm -rf goodguy-desktop/
 	mkdir goodguy-desktop
 	cp .goodguy-desktop goodguy-desktop/ -rf

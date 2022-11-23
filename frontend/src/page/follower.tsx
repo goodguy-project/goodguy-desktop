@@ -1,5 +1,5 @@
 import {Button, Form, Modal, Popover, Spin, Table as SemiTable, Typography} from "@douyinfe/semi-ui";
-import {CrawlApi, FollowerApi, JumpLink, SearchFollower} from "../api";
+import {CrawlApi, FollowerApi, JumpLink, LoadFollower, SearchFollower} from "../api";
 import {Dispatch, useState} from "react";
 import Column from "@douyinfe/semi-ui/lib/es/table/Column";
 import {deepCopy} from "deep-copy-ts";
@@ -276,14 +276,63 @@ export default function Follower(props: { setPage: Dispatch<Page> }): JSX.Elemen
         const fid = subPage.param?.fid || undefined;
         return <ManagerFollower setPage={setPage} setSubPage={setSubPage} fid={fid}/>;
     }
-    const addFollowerBtn = (
-        <Button style={{margin: '10px'}} onClick={() => {
+    const AddFollowerBtn = () => {
+        return <Button onClick={() => {
             setSubPage({page: 'manager'});
-        }}>新增关注者</Button>
-    );
+        }}>新增关注者</Button>;
+    };
+    const SaveFollowerBtn = () => {
+        return <Button style={{
+            marginLeft: 10,
+        }} onClick={() => {
+            FollowerApi('search').then((value) => {
+                const {SaveFile} = (window as any).app;
+                SaveFile('follower.json', JSON.stringify(value)).then((value: any) => {
+                    if (value) {
+                        Modal.success({
+                            title: '导出成功',
+                            content: `导出位置：${value}`,
+                        });
+                    }
+                }).catch((e: any) => {
+                    alert(e);
+                });
+            });
+        }}>导出关注者</Button>;
+    };
+    const LoadFollowerBtn = () => {
+        return <Button style={{
+            marginLeft: 10,
+        }} onClick={() => {
+            const {SelectFile} = (window as any).app;
+            SelectFile({
+                filters: [
+                    {name: 'json file', extensions: ['json']},
+                ],
+            }).then((value: string | null) => {
+                Modal.confirm({
+                    title: '确定导入',
+                    content: '导入关注者会导致原有数据丢失，是否要导入？',
+                    onOk() {
+                        if (value) {
+                            LoadFollower(value).then(() => {
+                                setPage('follower');
+                            });
+                        }
+                    },
+                });
+            });
+        }}>导入关注者</Button>;
+    };
     return (
         <>
-            {addFollowerBtn}
+            <div style={{
+                margin: 10,
+            }}>
+                <AddFollowerBtn/>
+                <SaveFollowerBtn/>
+                <LoadFollowerBtn/>
+            </div>
             <Table setSubPage={setSubPage}/>
         </>
     );

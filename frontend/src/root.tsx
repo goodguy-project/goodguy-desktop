@@ -21,7 +21,7 @@ export default function Root() {
         return <Loading/>;
     }
     const PageMap = new Map<Page, ReactNode>([
-        ['calendar', <Calendar/>],
+        ['calendar', <Calendar setPage={setPage}/>],
         ['follower', <Follower setPage={setPage}/>],
         ['compare', <Compare/>],
         ['setting', <Setting setPage={setPage}/>],

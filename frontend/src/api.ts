@@ -82,10 +82,23 @@ export function GetCrawlSetting() {
 }
 
 export async function UpdateCrawlSetting(data: any) {
-    console.log(data);
     const resp = await axios.post(`${server}/crawl/update-setting`, data);
     if (resp.status !== 200) {
         console.log(resp);
     }
     return resp.data;
+}
+
+export async function LoadFollower(filename: string) {
+    try {
+        await axios.post(`${server}/follower/load`, {
+            filename: filename,
+        });
+    } catch (e) {
+        alert(e);
+    }
+}
+
+export async function CleanCrawlCache() {
+    return await axios.post(`${server}/crawl/clean-cache`);
 }

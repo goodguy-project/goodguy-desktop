@@ -1,8 +1,9 @@
 import {Button, Calendar as SemiCalendar, Spin, Typography} from '@douyinfe/semi-ui';
-import {CrawlApi, JumpLink} from "../api";
+import {CleanCrawlCache, CrawlApi, JumpLink} from "../api";
 import {EventObject} from '@douyinfe/semi-foundation/lib/es/calendar/foundation';
 import {IconClose, IconTickCircle} from "@douyinfe/semi-icons";
-import {useState} from "react";
+import {Dispatch, useState} from "react";
+import {Page} from "./page";
 
 function DoShowCalendar(recentContest: any[]): JSX.Element {
     const {Numeral} = Typography;
@@ -55,7 +56,8 @@ function DoShowCalendar(recentContest: any[]): JSX.Element {
     );
 }
 
-function RecentContestLoadingPage(platforms: string[]): JSX.Element {
+function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch<Page>}): JSX.Element {
+    const {platforms, setPage} = props;
     const [force, setForce] = useState(false);
     const [ready, setReady] = useState(false);
     const recentContest = [];
@@ -85,14 +87,13 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
         }, 1000);
     }
     const messageStyle = {
-        marginBottom: '25px',
-        fontSize: '22px'
+        marginBottom: '47px',
+        fontSize: '22px',
     };
     const FailedElement = () => {
-        return <></>;
-        // return failed > 0 ? (
-        //     <div style={messageStyle}>某些平台爬取失败了，你可以选择重新爬取。</div>
-        // ) : <></>;
+        return failed > 0 ? (
+            <div style={messageStyle}>某些平台爬取失败了，你可以选择重新爬取。</div>
+        ) : <></>;
     };
     const AllSuccessElement = () => {
         return allSuccess ? (
@@ -173,6 +174,18 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
                 <AllSuccessElement/>
                 <FailedElement/>
                 {
+                    failed > 0 ? (
+                        <Button size="large" style={{
+                            transform: 'scale(1.2)',
+                            marginRight: 70,
+                        }} theme="solid" type="tertiary" onClick={() => {
+                            CleanCrawlCache().then(()=>{
+                                setPage('calendar');
+                            });
+                        }}>重新爬取</Button>
+                    ) : <></>
+                }
+                {
                     allSuccess ? <></> : (
                         <Button size="large" style={{
                             transform: 'scale(1.2)',
@@ -186,6 +199,9 @@ function RecentContestLoadingPage(platforms: string[]): JSX.Element {
     );
 }
 
-export default function Calendar(): JSX.Element {
-    return RecentContestLoadingPage(['nowcoder', 'acwing', 'leetcode', 'codeforces', 'luogu', 'acwing']);
+export default function Calendar(props: {setPage: Dispatch<Page>}): JSX.Element {
+    return RecentContestLoadingPage({
+        platforms: ['nowcoder', 'acwing', 'leetcode', 'codeforces', 'luogu', 'acwing'],
+        setPage: props.setPage,
+    });
 }
