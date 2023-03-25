@@ -9,7 +9,7 @@
 - [gorm](https://github.com/go-gorm/gorm)
 - [semi-design](https://github.com/DouyinFE/semi-design)
 
-wails（v2.4.1）目前无法跨操作系统编译，所以在release中只提供Windows版本。
+wails（v2.4.1）目前无法跨操作系统编译，所以在[release](https://github.com/goodguy-project/goodguy-desktop/releases)中只提供Windows版本。
 
 Mac和Linux用户可以按照[指引](https://wails.io/zh-Hans/docs/gettingstarted/installation)安装Go和NPM编译运行。
 
@@ -32,7 +32,3 @@ Mac和Linux用户可以按照[指引](https://wails.io/zh-Hans/docs/gettingstart
 进行多个人数据的对比。
 
 ![](docs/compare.png)
-
-## 使用方法
-
-在[releases](https://github.com/goodguy-project/goodguy-desktop/releases)找到最新版本的7z压缩文件，解压后启动goodguy-desktop下的bat文件即可使用。
