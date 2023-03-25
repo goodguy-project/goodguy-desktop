@@ -1,15 +1,9 @@
 import {Nav} from "@douyinfe/semi-ui";
-import {
-    IconCalendar,
-    IconDesktop,
-    IconMoon,
-    IconPulse,
-    IconSetting,
-    IconSun,
-    IconUserGroup
-} from "@douyinfe/semi-icons";
-import {Dispatch, useEffect, useState} from "react";
-import {Page} from "./page/page";
+import {IconCalendar, IconDesktop, IconPulse, IconSetting, IconUserGroup} from "@douyinfe/semi-icons";
+import {useEffect, useState} from "react";
+import {SetPageInfo} from "../wailsjs/go/main/App";
+import {main} from "../wailsjs/go/models";
+import PageInfo = main.PageInfo;
 
 const darkModeStorageKey = 'goodguy-desktop.dark-mode';
 
@@ -17,8 +11,8 @@ function IsDarkMode(): boolean {
     return window.localStorage.getItem(darkModeStorageKey) === '1';
 }
 
-export default function Navigation(props: { page: Page, setPage: Dispatch<Page> }): JSX.Element {
-    const {page, setPage} = props;
+export default function Navigation(props: { pageInfo: PageInfo }): JSX.Element {
+    const {pageInfo} = props;
     const [isDarkMode, setIsDarkMode] = useState(IsDarkMode());
     const DoSwitchMode = (dark: boolean) => {
         dark ?
@@ -45,7 +39,7 @@ export default function Navigation(props: { page: Page, setPage: Dispatch<Page> 
     // );
     return (
         <Nav
-            selectedKeys={[page]}
+            selectedKeys={[pageInfo.page || '']}
             items={[
                 {itemKey: 'calendar', text: '比赛日历', icon: <IconCalendar/>},
                 {itemKey: 'follower', text: '关注', icon: <IconUserGroup/>},
@@ -58,8 +52,9 @@ export default function Navigation(props: { page: Page, setPage: Dispatch<Page> 
                 text: '训练助手客户端',
             }}
             onSelect={(key) => {
-                console.log(key);
-                setPage(key.itemKey.toString() as Page);
+                SetPageInfo(new PageInfo({
+                    page: key.itemKey.toString(),
+                })).then(_ => _);
             }}
             footer={footer}
         />

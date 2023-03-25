@@ -4,9 +4,10 @@ import ReactDOM from "react-dom/client";
 import {ReportHandler} from "web-vitals";
 import Root from "./root";
 
-const root = ReactDOM.createRoot(
-    document.getElementById('root') as HTMLElement
-);
+const container = document.getElementById('root');
+
+const root = ReactDOM.createRoot(container!);
+
 root.render(
     <React.StrictMode>
         <Root/>

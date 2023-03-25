@@ -1,8 +1,10 @@
 import ReactECharts from 'echarts-for-react';
 import {GetAtcoderRatingColor, GetCodeforcesRatingColor, GetNowcoderRatingColor} from "../util/color";
-import {CrawlApi} from "../api";
+import {CrawlApi} from "../interact";
 import {renderToString} from "react-dom/server";
 import {FailedElement, LoadingElement, proportion, Unique} from "./common";
+import {proto} from "../../wailsjs/go/models";
+import GetContestRecordResponse = proto.GetContestRecordResponse;
 
 function getLineGraphBackgroundData(platform: string) {
     let ratings: number[] = [];
@@ -58,11 +60,10 @@ export default function ContestLineGraph(props: { platform: string, handle: stri
         return <FailedElement platform={platform}/>;
     }
     const data = handle.map((h) => {
-        const resp = CrawlApi('GetUserContestRecord', {
+        const resp: GetContestRecordResponse | undefined | null = CrawlApi('GetContestRecord', {
             platform: platform,
             handle: h,
         });
-        // console.log(resp);
         if (resp === undefined || resp === null) {
             return {
                 handle: h,
@@ -71,8 +72,8 @@ export default function ContestLineGraph(props: { platform: string, handle: stri
         }
         return {
             handle: h,
-            data: resp?.record?.map((value: any) => {
-                const date = new Date(parseInt(value?.timestamp || '0') * 1000.0);
+            data: resp?.record?.map((value) => {
+                const date = new Date((value?.timestamp || 0) * 1000.0);
                 return [
                     `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
                     value?.rating || 0,
@@ -183,7 +184,6 @@ export default function ContestLineGraph(props: { platform: string, handle: stri
             borderColor: '#777',
             formatter: function (obj: any) {
                 const value = obj.value;
-                // console.log(obj);
                 return renderToString(
                     <div style={{
                         fontSize: '18px',

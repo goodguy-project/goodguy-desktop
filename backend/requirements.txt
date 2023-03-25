@@ -1,7 +1,0 @@
-SQLAlchemy
-Flask
-cachetools
-Flask-Cors
-gevent
-pyinstaller
-PyYAML

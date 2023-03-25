@@ -1,7 +1,33 @@
 import {FailedElement, LoadingElement, proportion, Unique} from "./common";
 import ReactECharts from "echarts-for-react";
-import {CrawlApi} from "../api";
+import {CrawlApi} from "../interact";
+import {proto} from "../../wailsjs/go/models";
+import GetSubmitRecordResponse = proto.GetSubmitRecordResponse;
 
+const ProtoLangMap = new Map<number, string>([
+    [0, "Unknown"],
+    [1, "Cpp"],
+    [2, "Java"],
+    [3, "Python"],
+    [4, "Golang"],
+    [5, "C"],
+    [6, "CSharp"],
+    [7, "Kotlin"],
+    [8, "JavaScript"],
+    [9, "TypeScript"],
+    [10, "Lua"],
+    [11, "ObjectiveC"],
+    [12, "Swift"],
+    [13, "Rust"],
+    [14, "Scala"],
+    [15, "Pascal"],
+    [16, "Haskell"],
+    [17, "Ruby"],
+    [18, "PHP"],
+    [19, "Erlang"],
+    [20, "Elixir"],
+    [21, "Racket"],
+]);
 
 export default function LangDistribution(props: { platform: string, handle: string[] }): JSX.Element {
     const {platform} = props;
@@ -10,7 +36,10 @@ export default function LangDistribution(props: { platform: string, handle: stri
         return <FailedElement platform={platform}/>;
     }
     const data = handle.map((h) => {
-        const resp = CrawlApi('GetUserSubmitRecord', {platform: platform, handle: h});
+        const resp: GetSubmitRecordResponse | undefined | null = CrawlApi('GetSubmitRecord', {
+            platform: platform,
+            handle: h
+        });
         return {
             handle: h,
             data: resp,
@@ -34,9 +63,10 @@ export default function LangDistribution(props: { platform: string, handle: stri
         const map = new Map<string, number>();
         langMap.set(d.handle, map);
         countMap.set(d.handle, 0);
-        const record = d.data?.submitRecordData || []
+        const record = d.data?.submit_record || []
         for (const r of record) {
-            const lang = r?.programmingLanguage;
+            const langIndex = r?.programming_language;
+            const lang = ProtoLangMap.get(langIndex === undefined ? -1 : langIndex);
             if (lang) {
                 if (langDict.get(lang) === undefined) {
                     langDict.set(lang, langDict.size);
@@ -49,7 +79,6 @@ export default function LangDistribution(props: { platform: string, handle: stri
     const radiusData: string[] = [];
     const allLang: string[] = new Array(langDict.size);
     langDict.forEach((i, lang) => {
-        console.log(`${lang} - ${i}`)
         allLang[i] = lang;
     });
     const series: any[] = [];
@@ -77,7 +106,6 @@ export default function LangDistribution(props: { platform: string, handle: stri
                 series[index].data.push(0);
             }
             map.forEach((value, lang) => {
-                console.log(`${key}: ${lang}=${value}`);
                 series[langDict.get(lang) as number].data[index] = value / (countMap.get(key) || 0);
             });
             index += 1;
@@ -97,7 +125,6 @@ export default function LangDistribution(props: { platform: string, handle: stri
             data: allLang,
         },
     };
-    console.log(option);
     return <ReactECharts style={{
         width: '100%',
         height: `calc(100vh * ${proportion})`,

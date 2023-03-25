@@ -1,17 +1,20 @@
 import {Button, Calendar as SemiCalendar, Spin, Typography} from '@douyinfe/semi-ui';
-import {CleanCrawlCache, CrawlApi, JumpLink} from "../api";
+import {CrawlApi} from "../interact";
 import {EventObject} from '@douyinfe/semi-foundation/lib/es/calendar/foundation';
 import {IconClose, IconTickCircle} from "@douyinfe/semi-icons";
-import {Dispatch, useState} from "react";
-import {Page} from "./page";
+import {useState} from "react";
+import {BrowserOpenURL} from "../../wailsjs/runtime";
+import {CleanCrawlCache, SetPageInfo} from "../../wailsjs/go/main/App";
+import {main, proto} from "../../wailsjs/go/models";
+import PageInfo = main.PageInfo;
+import GetRecentContestResponse = proto.GetRecentContestResponse;
 
-function DoShowCalendar(recentContest: any[]): JSX.Element {
+function DoShowCalendar(recentContest: GetRecentContestResponse[]): JSX.Element {
     const {Numeral} = Typography;
     const events: EventObject[] = [];
-    recentContest?.forEach((contests: any) => {
+    recentContest?.forEach((contests) => {
         const platform = contests?.platform || '';
-        contests?.recentContest?.forEach((contest: any) => {
-            // console.log(contest);
+        contests?.recent_contest?.forEach((contest: any) => {
             const url = contest?.url || undefined;
             const name = contest?.name || '';
             const startTime = Number(contest?.timestamp) || 0;
@@ -35,8 +38,7 @@ function DoShowCalendar(recentContest: any[]): JSX.Element {
                             url ? (
                                 <Numeral onClick={() => {
                                     if (url) {
-                                        JumpLink(url).then(() => {
-                                        });
+                                        BrowserOpenURL(url);
                                     }
                                 }} style={{cursor: 'pointer'}}>{content}</Numeral>
                             ) : <Numeral>{content}</Numeral>
@@ -56,14 +58,13 @@ function DoShowCalendar(recentContest: any[]): JSX.Element {
     );
 }
 
-function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch<Page>}): JSX.Element {
-    const {platforms, setPage} = props;
-    const [force, setForce] = useState(false);
-    const [ready, setReady] = useState(false);
-    const recentContest = [];
+function RecentContestLoadingPage(props: { platforms: string[] }): JSX.Element {
+    const {platforms} = props;
+    const recentContest: { platform: string, response: GetRecentContestResponse | undefined | null }[] = [];
     let success = 0, failed = 0;
     for (const platform of platforms) {
-        const response = CrawlApi('GetRecentContest', {platform: platform});
+        const response: GetRecentContestResponse | undefined | null =
+            CrawlApi('GetRecentContest', {platform: platform});
         recentContest.push({platform: platform, response: response});
         if (response !== undefined && response !== null) {
             success += 1;
@@ -71,15 +72,17 @@ function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch
             failed += 1;
         }
     }
+    const [ready, setReady] = useState(false);
     const allSuccess = platforms.length === success;
     if (ready && !allSuccess) {
         setReady(false);
     }
+    const [force, setForce] = useState(false);
     // ready to paint calendar
     if (force || (ready && allSuccess)) {
         return DoShowCalendar(recentContest.map((value) => {
-            return value?.response || [];
-        }));
+            return value.response;
+        }) as GetRecentContestResponse[]);
     }
     if (!ready && allSuccess) {
         setTimeout(() => {
@@ -114,9 +117,10 @@ function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch
                 display: 'flex',
             }}>
                 {
-                    recentContest.map((value, index) => {
-                        const platform = value?.platform || '';
-                        if (value?.response === null) {
+                    recentContest.map((v, index) => {
+                        const platform = v.platform;
+                        const value = v.response;
+                        if (value === null) {
                             return (
                                 <span style={{
                                     marginRight: index + 1 === platforms.length ? '0' : '180px',
@@ -130,7 +134,7 @@ function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch
                                     }}>{platform}</div>
                                 </span>
                             );
-                        } else if (value?.response) {
+                        } else if (value) {
                             return (
                                 <span style={{
                                     marginRight: index + 1 === platforms.length ? '0' : '180px',
@@ -179,8 +183,10 @@ function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch
                             transform: 'scale(1.2)',
                             marginRight: 70,
                         }} theme="solid" type="tertiary" onClick={() => {
-                            CleanCrawlCache().then(()=>{
-                                setPage('calendar');
+                            CleanCrawlCache().then(() => {
+                                SetPageInfo(new PageInfo({
+                                    page: 'calendar',
+                                })).then(r => {});
                             });
                         }}>重新爬取</Button>
                     ) : <></>
@@ -199,9 +205,8 @@ function RecentContestLoadingPage(props: {platforms: string[], setPage: Dispatch
     );
 }
 
-export default function Calendar(props: {setPage: Dispatch<Page>}): JSX.Element {
+export default function Calendar(props: {}): JSX.Element {
     return RecentContestLoadingPage({
         platforms: ['nowcoder', 'acwing', 'leetcode', 'codeforces', 'luogu', 'acwing'],
-        setPage: props.setPage,
     });
 }

@@ -1,23 +1,35 @@
 import {Button, Form, Modal, Popover, Spin, Table as SemiTable, Typography} from "@douyinfe/semi-ui";
-import {CrawlApi, FollowerApi, JumpLink, LoadFollower, SearchFollower} from "../api";
-import {Dispatch, useState} from "react";
+import {CrawlApi} from "../interact";
+import {useState} from "react";
 import Column from "@douyinfe/semi-ui/lib/es/table/Column";
 import {deepCopy} from "deep-copy-ts";
-import {Page} from "./page";
 import {IconAlertCircle} from "@douyinfe/semi-icons";
-import {FrontEndJump} from "../util/jump";
 import {GetAtcoderRatingColor, GetCodeforcesRatingColor, GetNowcoderRatingColor} from "../util/color";
+import {
+    DeleteFollower,
+    LoadFollower,
+    SaveFile,
+    SaveFollower,
+    SearchFollower,
+    SelectFile,
+    SetPageInfo
+} from "../../wailsjs/go/main/App";
+import {BrowserOpenURL, LogError} from "../../wailsjs/runtime";
+import {core, main, model, proto} from "../../wailsjs/go/models";
+import PageInfo = main.PageInfo;
+import SearchFollowerRequest = core.SearchFollowerRequest;
+import GetContestRecordResponse = proto.GetContestRecordResponse;
 
 const {Numeral} = Typography;
 
-type SubPage = { page: 'table' | 'manager', param?: any };
-
-function ManagerFollower(props: { fid?: number, setPage: Dispatch<Page>, setSubPage: Dispatch<SubPage> }): JSX.Element {
-    const {fid, setPage, setSubPage} = props;
-    const [follower, setFollower] = useState<any>(null);
+function ManagerFollower(props: { fid?: number }): JSX.Element {
+    const {fid} = props;
+    const [follower, setFollower] = useState<model.Follower | undefined>(undefined);
     if (fid && !follower) {
-        FollowerApi('search', {fid: fid}).then((resp) => {
-            if (resp?.length) {
+        SearchFollower(new SearchFollowerRequest({
+            'id': [fid],
+        })).then((resp) => {
+            if (resp.length) {
                 setFollower(resp[0]);
             }
         });
@@ -54,17 +66,19 @@ function ManagerFollower(props: { fid?: number, setPage: Dispatch<Page>, setSubP
                             formApi.validate().then(() => {
                                 if (follower) {
                                     const form = deepCopy(formState);
-                                    form.values.fid = fid;
-                                    FollowerApi('update', form.values).then(() => {
-                                        console.log('update ok');
-                                        setPage('follower');
+                                    form.values['id'] = fid;
+                                    SaveFollower(new model.Follower(form.values)).then(() => {
+                                        SetPageInfo(new PageInfo({
+                                            page: 'follower',
+                                        })).then(_ => _);
                                     }).catch((err) => {
                                         alert(err);
                                     });
                                 } else {
-                                    FollowerApi('add', formState.values).then(() => {
-                                        console.log('add ok');
-                                        setPage('follower');
+                                    SaveFollower(new model.Follower(formState.values)).then(() => {
+                                        SetPageInfo(new PageInfo({
+                                            page: 'follower',
+                                        })).then(_ => _);
                                     }).catch((err) => {
                                         alert(err);
                                     });
@@ -73,7 +87,13 @@ function ManagerFollower(props: { fid?: number, setPage: Dispatch<Page>, setSubP
                             });
                         }}>确认</Button>
                         <Button onClick={() => {
-                            setSubPage({page: 'table'});
+                            SetPageInfo(new PageInfo({
+                                page: 'follower',
+                                follower: {
+                                    page: 'table',
+                                }
+                            })).then(r => {
+                            });
                         }}>取消</Button>
                     </>
                 );
@@ -92,8 +112,7 @@ function NowcoderRatingElement(props: { handle: string, rating: number }): JSX.E
     const {handle, rating} = props;
     return (
         <Numeral style={{color: GetNowcoderRatingColor(rating), cursor: 'pointer'}} onClick={() => {
-            JumpLink(`https://www.nowcoder.com/users/${encodeURI(handle)}`).then(() => {
-            });
+            BrowserOpenURL(`https://www.nowcoder.com/users/${encodeURI(handle)}`);
         }}>
             <b>{rating}</b>
         </Numeral>
@@ -104,8 +123,7 @@ function CodeforcesRatingElement(props: { handle: string, rating: number }): JSX
     const {handle, rating} = props;
     return (
         <Numeral style={{color: GetCodeforcesRatingColor(rating), cursor: 'pointer'}} onClick={() => {
-            JumpLink(`https://codeforces.com/profile/${encodeURI(handle)}`).then(() => {
-            });
+            BrowserOpenURL(`https://codeforces.com/profile/${encodeURI(handle)}`);
         }}>
             <b>{rating}</b>
         </Numeral>
@@ -116,8 +134,7 @@ function AtCoderRatingElement(props: { handle: string, rating: number }): JSX.El
     const {handle, rating} = props;
     return (
         <Numeral style={{color: GetAtcoderRatingColor(rating), cursor: 'pointer'}} onClick={() => {
-            JumpLink(`https://atcoder.jp/users/${encodeURI(handle)}`).then(() => {
-            });
+            BrowserOpenURL(`https://atcoder.jp/users/${encodeURI(handle)}`);
         }}>
             <b>{rating}</b>
         </Numeral>
@@ -129,7 +146,10 @@ function RatingElement(props: { platform: string, handle: string }): JSX.Element
     if (!handle) {
         return <></>;
     }
-    const resp = CrawlApi('GetUserContestRecord', {platform: platform, handle: handle});
+    const resp: GetContestRecordResponse | undefined | null = CrawlApi('GetContestRecord', {
+        platform: platform,
+        handle: handle
+    });
     const CrawlFailedElement = () => {
         return (
             <Popover content={
@@ -164,10 +184,17 @@ function RatingElement(props: { platform: string, handle: string }): JSX.Element
     return <CellLoading/>;
 }
 
-function Table(props: { setSubPage: Dispatch<SubPage> }): JSX.Element {
-    const {setSubPage} = props;
-    const follower = SearchFollower({});
-    const data = follower?.map((v: any, index: number) => {
+function Table(): JSX.Element {
+    const [follower, setFollower] = useState<Array<model.Follower> | undefined>(undefined);
+    if (follower === undefined) {
+        SearchFollower({}).then((value) => {
+            setFollower(value);
+        }).catch((err) => {
+            LogError(err.toString());
+        });
+        return <Spin size="middle"/>;
+    }
+    const data = follower?.map((v, index) => {
         return {
             key: (index + 1).toString(),
             fid: v?.id || null,
@@ -193,8 +220,7 @@ function Table(props: { setSubPage: Dispatch<SubPage> }): JSX.Element {
         }
         return (
             <Numeral style={{cursor: 'pointer'}} onClick={() => {
-                JumpLink(profileUrl).then(() => {
-                });
+                BrowserOpenURL(profileUrl);
             }}><TextElement text={handle}/>
             </Numeral>
         );
@@ -242,13 +268,26 @@ function Table(props: { setSubPage: Dispatch<SubPage> }): JSX.Element {
                         return (
                             <>
                                 <Button style={{marginRight: 8}} onClick={() => {
-                                    setSubPage({page: 'manager', param: {fid: fid}});
+                                    SetPageInfo(new PageInfo({
+                                        page: 'follower',
+                                        follower: {
+                                            page: 'manager',
+                                            fid: fid,
+                                        }
+                                    })).then(r => {
+                                    });
                                 }}>修改</Button>
                                 <Button onClick={() => {
                                     Modal.confirm({
                                         title: '是否删除', onOk: () => {
-                                            FollowerApi('delete', {fid: fid}).then(() => {
-                                                setSubPage({page: 'table'});
+                                            const fids = [typeof fid === 'number' ? fid : parseInt(fid.toString())];
+                                            DeleteFollower(fids).then(() => {
+                                                SetPageInfo(new PageInfo({
+                                                    page: 'follower',
+                                                    follower: {
+                                                        page: 'table',
+                                                    }
+                                                })).then(_ => _);
                                             });
                                         }
                                     });
@@ -263,31 +302,29 @@ function Table(props: { setSubPage: Dispatch<SubPage> }): JSX.Element {
     );
 }
 
-export default function Follower(props: { setPage: Dispatch<Page> }): JSX.Element {
-    const {setPage} = props;
-    // const [subPage, setSubPage] = useState<SubPage>({page: 'table'});
-    const subPage: SubPage = (JSON.parse(new URLSearchParams(window.location.search).get('sub_page') || '{"page":"table"}') || {page: 'table'}) as SubPage;
-    const setSubPage = (subPage: SubPage): void => {
-        const urlParam = new URLSearchParams(window.location.search);
-        urlParam.set('sub_page', JSON.stringify(subPage));
-        FrontEndJump(urlParam);
-    };
-    if (subPage.page === 'manager') {
-        const fid = subPage.param?.fid || undefined;
-        return <ManagerFollower setPage={setPage} setSubPage={setSubPage} fid={fid}/>;
+export default function Follower(props: { pageInfo: PageInfo }): JSX.Element {
+    const {pageInfo} = props;
+    if (pageInfo.follower?.page === 'manager') {
+        const fid = pageInfo.follower?.fid || undefined;
+        return <ManagerFollower fid={fid}/>;
     }
     const AddFollowerBtn = () => {
         return <Button onClick={() => {
-            setSubPage({page: 'manager'});
+            SetPageInfo(new PageInfo({
+                page: 'follower',
+                follower: {
+                    page: 'manager',
+                },
+            })).then(r => {
+            });
         }}>新增关注者</Button>;
     };
     const SaveFollowerBtn = () => {
         return <Button style={{
             marginLeft: 10,
         }} onClick={() => {
-            FollowerApi('search').then((value) => {
-                const {SaveFile} = (window as any).app;
-                SaveFile('follower.json', JSON.stringify(value)).then((value: any) => {
+            SearchFollower(new SearchFollowerRequest({})).then((value) => {
+                SaveFile(JSON.stringify(value)).then((value) => {
                     if (value) {
                         Modal.success({
                             title: '导出成功',
@@ -304,23 +341,24 @@ export default function Follower(props: { setPage: Dispatch<Page> }): JSX.Elemen
         return <Button style={{
             marginLeft: 10,
         }} onClick={() => {
-            const {SelectFile} = (window as any).app;
-            SelectFile({
-                filters: [
-                    {name: 'json file', extensions: ['json']},
-                ],
-            }).then((value: string | null) => {
-                Modal.confirm({
-                    title: '确定导入',
-                    content: '导入关注者会导致原有数据丢失，是否要导入？',
-                    onOk() {
-                        if (value) {
-                            LoadFollower(value).then(() => {
-                                setPage('follower');
-                            });
-                        }
-                    },
-                });
+            SelectFile().then((filename) => {
+                if (filename.length > 0) {
+                    Modal.confirm({
+                        title: '确定导入',
+                        content: '导入关注者会导致原有数据丢失，是否要导入？',
+                        onOk() {
+                            if (filename) {
+                                LoadFollower(filename).then(() => {
+                                    SetPageInfo(new PageInfo({
+                                        page: 'follower',
+                                    })).then(_ => _);
+                                }).catch((err) => {
+                                    alert(err);
+                                });
+                            }
+                        },
+                    });
+                }
             });
         }}>导入关注者</Button>;
     };
@@ -333,7 +371,7 @@ export default function Follower(props: { setPage: Dispatch<Page> }): JSX.Elemen
                 <SaveFollowerBtn/>
                 <LoadFollowerBtn/>
             </div>
-            <Table setSubPage={setSubPage}/>
+            <Table/>
         </>
     );
 }

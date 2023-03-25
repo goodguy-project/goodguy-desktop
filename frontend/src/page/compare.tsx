@@ -2,9 +2,14 @@ import {CSSProperties, useState} from "react";
 import ContestLineGraph from "../graph/contest_line";
 import {deepCopy} from "deep-copy-ts";
 import {Button, Select} from "@douyinfe/semi-ui";
-import {SearchFollower} from "../api";
 import LangDistribution from "../graph/lang_distribution";
-import {FrontEndJump} from "../util/jump";
+import {SearchFollower, SetPageInfo} from "../../wailsjs/go/main/App";
+import {core, main, model} from "../../wailsjs/go/models";
+import PageInfo = main.PageInfo;
+import SearchFollowerRequest = core.SearchFollowerRequest;
+import Follower = model.Follower;
+import {LogError} from "../../wailsjs/runtime";
+import Loading from "./loading";
 
 const padding = 10;
 
@@ -82,20 +87,56 @@ function Graph(props: { elements?: JSX.Element[] }): JSX.Element {
 
 let selectedCache: any = undefined;
 
-export default function Compare(props: {}): JSX.Element {
-    const follower: any[] | undefined = SearchFollower();
-    // const [selected, setSelected] = useState<any[]>([]);
-    const selected: (string | number)[] = (() => {
-        const urlParam = new URLSearchParams(window.location.search);
-        return JSON.parse(urlParam.get('sub_page') || '[]');
+export default function Compare(props: {pageInfo: PageInfo}): JSX.Element {
+    const {pageInfo} = props;
+    const selected: number[] = (() => {
+        const fid = pageInfo?.compare?.fid;
+        return fid || [];
     })();
+    const [selectedInfo, setSelectedInfo] = useState<Array<Follower> | undefined>(undefined);
+    const [follower, setFollower] = useState<Array<Follower> | undefined>(undefined);
+    if (selectedInfo === undefined && follower === undefined) {
+        if (selected.length === 0) {
+            setTimeout(() => {
+                setSelectedInfo([]);
+            }, 0);
+        } else {
+            SearchFollower(new SearchFollowerRequest({
+                'id': selected,
+            })).then((value) => {
+                setSelectedInfo(value);
+            }).catch((err) => {
+                LogError(err.toString());
+            });
+        }
+        SearchFollower(new SearchFollowerRequest({})).then((value) => {
+            setFollower(value);
+        }).catch((err) => {
+            LogError(err.toString());
+        });
+    }
+    if (selectedInfo === undefined || follower === undefined) {
+        return <Loading/>;
+    }
     const setSelected = (selected: (string | number)[]): void => {
-        const urlParam = new URLSearchParams(window.location.search);
-        urlParam.set('sub_page', JSON.stringify(selected));
-        FrontEndJump(urlParam);
+        const fid: number[] = [];
+        for (const x of selected) {
+            if (typeof x === 'number') {
+                fid.push(x);
+            } else {
+                fid.push(parseInt(x));
+            }
+        }
+        SetPageInfo(new PageInfo({
+            page: 'compare',
+            compare: {
+                fid: fid,
+            },
+        })).then(() => {
+        });
     };
-    const selectedInfo: any[] | undefined = SearchFollower({fid: selected});
-    const platforms: string[] = ['codeforces', 'nowcoder', 'atcoder', 'luogu', 'leetcode', 'vjudge'];
+    type ComparePlatform = 'codeforces' | 'nowcoder' | 'atcoder' | 'luogu' | 'leetcode' | 'vjudge';
+    const platforms: ComparePlatform[] = ['codeforces', 'nowcoder', 'atcoder', 'luogu', 'leetcode', 'vjudge'];
     const info = new Map<string, string[]>();
     for (const platform of platforms) {
         info.set(platform, []);
@@ -104,8 +145,24 @@ export default function Compare(props: {}): JSX.Element {
         if (!value) {
             return;
         }
-        const push = (key: string) => {
-            const v = value[`${key}_id`];
+        const push = (key: ComparePlatform) => {
+            let v: string;
+            if (key === 'codeforces') {
+                v = value.codeforces_id;
+            } else if (key === 'nowcoder') {
+                v = value.nowcoder_id;
+            } else if (key === 'atcoder') {
+                v = value.atcoder_id;
+            } else if (key === 'luogu') {
+                v = value.luogu_id;
+            } else if (key === 'leetcode') {
+                v = value.leetcode_id;
+            } else if (key === 'vjudge') {
+                v = value.vjudge_id;
+            } else {
+                const k: never = key;
+                v = `${k}${k}`;
+            }
             if (v) {
                 info.get(key)?.push(v);
             }

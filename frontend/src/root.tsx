@@ -4,32 +4,30 @@ import Follower from "./page/follower";
 import {ReactNode} from "react";
 import {Page} from "./page/page";
 import Loading from "./page/loading";
-import {FrontEndJump} from "./util/jump";
 import Compare from "./page/compare";
 import Setting from "./page/setting";
+import {GetPageInfo} from "../wailsjs/go/main/App";
+import {main} from "../wailsjs/go/models";
+import PageInfo = main.PageInfo;
+import Sync from "./util/sync";
 
-export default function Root() {
-    const page: Page = (new URLSearchParams(window.location.search).get('page') || 'calendar') as Page;
-    // console.log(window.location.href);
-    const setPage = (page: Page): void => {
-        const urlParam = new URLSearchParams(window.location.search);
-        urlParam.set('page', page);
-        urlParam.delete('sub_page');
-        FrontEndJump(urlParam);
-    };
-    if (page === 'loading') {
-        return <Loading/>;
-    }
+async function root(): Promise<JSX.Element> {
+    const pageInfo: PageInfo = await GetPageInfo();
+    const page: Page = pageInfo.page as Page;
     const PageMap = new Map<Page, ReactNode>([
-        ['calendar', <Calendar setPage={setPage}/>],
-        ['follower', <Follower setPage={setPage}/>],
-        ['compare', <Compare/>],
-        ['setting', <Setting setPage={setPage}/>],
+        ['calendar', <Calendar/>],
+        ['follower', <Follower pageInfo={pageInfo}/>],
+        ['compare', <Compare pageInfo={pageInfo}/>],
+        ['setting', <Setting/>],
     ]);
     return (
         <div>
-            <Navigation page={page} setPage={setPage}/>
+            <Navigation pageInfo={pageInfo}/>
             {PageMap.get(page)}
         </div>
     );
+}
+
+export default function Root(): JSX.Element {
+    return Sync(root(), () => <Loading/>);
 }

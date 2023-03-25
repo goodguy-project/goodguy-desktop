@@ -1,20 +1,22 @@
-import {Button, Col, Form, Modal, Row, Spin, Typography} from "@douyinfe/semi-ui";
-import {CleanCrawlCache, GetCrawlSetting, UpdateCrawlSetting} from "../api";
-import {Dispatch} from "react";
-import {Page} from "./page";
+import {Button, Col, Form, Modal, Row, Typography} from "@douyinfe/semi-ui";
 import Loading from "./loading";
+import {CleanCrawlCache, GetCrawlSetting, SetPageInfo, UpdateCrawlSetting} from "../../wailsjs/go/main/App";
+import {core, main} from "../../wailsjs/go/models";
+import {useState} from "react";
+import CrawlSetting = core.CrawlSetting;
+import {deepCopy} from "deep-copy-ts";
+import PageInfo = main.PageInfo;
 
 const {Text} = Typography;
 
-export default function Setting(props: { setPage: Dispatch<Page> }): JSX.Element {
-    const {setPage} = props;
+export default function Setting(props: {}): JSX.Element {
     const {Section, Input} = Form;
-    let crawlSetting = GetCrawlSetting();
+    const [crawlSetting, setCrawlSetting] = useState<CrawlSetting | undefined>(undefined);
     if (crawlSetting === undefined) {
+        GetCrawlSetting().then((setting) => {
+            setCrawlSetting(setting);
+        });
         return <Loading/>;
-    }
-    if (typeof crawlSetting !== 'object') {
-        crawlSetting = {};
     }
     let formData: any = undefined;
     return (
@@ -22,7 +24,7 @@ export default function Setting(props: { setPage: Dispatch<Page> }): JSX.Element
             padding: 10,
         }}>
             <Form onValueChange={(data) => {
-                formData = data;
+                formData = deepCopy(data);
             }}>
                 <Section text="vjudge爬虫">
                     <Row>
@@ -39,26 +41,33 @@ export default function Setting(props: { setPage: Dispatch<Page> }): JSX.Element
                     </Row>
                     <Row>
                         <Text
-                            type="danger">你的vjudge账号密码只会本地保存不会上传。如有顾虑，可选择新建一个vjudge账户填入或不使用vjudge相关爬虫。</Text>
+                            type="danger">你的vjudge账号密码只会本地保存不会上传。如有顾虑，可选择新建一个vjudge账户填入或不使用vjudge相关爬虫。
+                        </Text>
                     </Row>
                     <Row style={{
                         marginTop: 10,
                     }}>
                         <Button theme="solid" onClick={() => {
-                            const promise = formData ? UpdateCrawlSetting(Object.assign(crawlSetting, {
+                            const setting = Object.assign(crawlSetting, {
                                 vjudge: {
                                     username: formData?.crawlVjudgeUsername || '',
                                     password: formData?.crawlVjudgePassword || '',
                                 },
-                            })) : new Promise((resolve) => {
-                                resolve(undefined);
                             });
+                            const promise = formData ?
+                                UpdateCrawlSetting(new CrawlSetting(setting)) :
+                                new Promise((resolve) => {
+                                    resolve(undefined);
+                                });
                             promise.then(() => {
                                 Modal.success({
                                     hasCancel: false,
                                     title: '设置修改成功',
                                     onOk: () => {
-                                        setPage('setting');
+                                        SetPageInfo(new PageInfo({
+                                            page: 'setting',
+                                        })).then(r => {
+                                        });
                                     },
                                 });
                             });

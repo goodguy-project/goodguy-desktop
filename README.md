@@ -2,7 +2,16 @@
 
 ## 简介
 
-算法竞赛训练助手客户端（目前仅支持windows）
+算法竞赛训练助手客户端
+
+主要使用的第三方库：
+- [wails](https://github.com/wailsapp/wails)
+- [gorm](https://github.com/go-gorm/gorm)
+- [semi-design](https://github.com/DouyinFE/semi-design)
+
+wails（v2.4.1）目前无法跨操作系统编译，所以在release中只提供Windows版本。
+
+Mac和Linux用户可以按照[指引](https://wails.io/zh-Hans/docs/gettingstarted/installation)安装Go和NPM编译运行。
 
 ## 功能介绍
 
